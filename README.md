@@ -110,23 +110,43 @@ Si alguna devuelve `"error"`, revisá que Docker esté corriendo y que los conte
 
 ## Estructura del proyecto
 
+Cada carpeta tiene un dueño según el rol del equipo. La flecha indica a qué base de datos pega cada endpoint.
+
 ```
 will-it-run/
+├── data/                        → dataset inicial en JSON (fuente de los seeds)        [Lorenzo]
+├── scripts/                     → scripts de seed: leen data/ e insertan en las bases   [Juan · Facundo · Tiziano]
 ├── src/
 │   ├── app/
-│   │   ├── api/           → endpoints (route.ts) — capa de orquestación
-│   │   │   └── health/    → healthcheck de las tres bases
-│   │   └── ...            → páginas (catalog, product, bench, account)
+│   │   ├── api/                 → capa de orquestación (cada carpeta = un route.ts)
+│   │   │   ├── health/          → healthcheck de las tres bases (ya implementado)
+│   │   │   ├── components/      → catálogo de componentes             → MongoDB
+│   │   │   ├── builds/          → ensambles (crear, score)            → MongoDB + Redis
+│   │   │   ├── compat/          → validación + advisories             → Neo4j (cache Redis)
+│   │   │   ├── performance/     → estimación de FPS y apps            → simulación + Redis
+│   │   │   ├── recommendations/ → recomendaciones y builds similares  → Neo4j
+│   │   │   └── community/       → community builds, reviews, rankings → MongoDB + Redis
+│   │   ├── catalog/             → página de catálogo        (diseño: Catalog.html)
+│   │   ├── products/[id]/       → detalle de producto       (diseño: Product.html)
+│   │   ├── bench/               → simulador "Will it Run?"  (diseño: Bench.html)
+│   │   ├── account/             → cuenta de usuario         (diseño: Account.html)
+│   │   └── layout.tsx · page.tsx · globals.css
+│   ├── components/              → componentes React reutilizables (sugerencia: subcarpetas por página + ui/)
+│   ├── types/                   → tipos TypeScript compartidos (Componente, Build, Game, App…)
 │   └── lib/
-│       ├── mongodb.ts     → conexión a MongoDB
-│       ├── neo4j.ts       → conexión a Neo4j
-│       └── redis.ts       → conexión a Redis
-├── docker-compose.yml     → define los tres contenedores
-├── .env.example           → template de variables de entorno
-└── ...
+│       ├── mongodb.ts · neo4j.ts · redis.ts → conexiones singleton (ya implementadas)
+│       ├── models/              → schemas de Mongoose                  [Juan]
+│       ├── queries/             → queries Cypher de Neo4j              [Facundo]
+│       ├── cache/               → helpers de Redis (claves, TTL)       [Tiziano]
+│       └── simulation/          → scoring, simulateFps, simulateApp    [Lorenzo]
+├── docker-compose.yml           → define los tres contenedores
+├── .env.example                 → template de variables de entorno
+└── README.md
 ```
 
-> **Pendiente (próximas etapas):** el dataset inicial va a vivir en `data/` (archivos JSON) y los scripts de seed en `scripts/`, que se correrán para poblar MongoDB y Neo4j. Cuando estén listos, se agregan acá los pasos de carga.
+> Las carpetas nuevas tienen un archivo `.gitkeep` (un placeholder vacío) para que Git las trackee aun estando vacías. Cuando agregues archivos reales a una carpeta, podés borrar su `.gitkeep`.
+>
+> **Pendiente:** `data/` y `scripts/` todavía están vacías — la construcción del dataset y los seeds se implementan en la etapa de desarrollo. Cuando los seeds estén listos, se agrega el paso de carga acá en "Puesta en marcha".
 
 ## Equipo y roles
 
